@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - OpporTune</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .auth-card {
+            width: 100%;
+            max-width: 450px;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="glass-card auth-card">
+            <div class="text-center mb-8">
+                <a href="index.html" class="logo justify-center mb-6">
+                    <i class="fas fa-radar text-gradient"></i>
+                    <span>OpporTune</span>
+                </a>
+                <h1 class="text-2xl font-bold">Create Account</h1>
+                <p class="text-muted mt-2">Join OpporTune to find your fit.</p>
+            </div>
+            
+            <form id="registerForm">
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" id="name" class="form-control" required placeholder="John Doe">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="email" class="form-control" required placeholder="student@example.com">
+                </div>
+                
+                <div class="form-group mb-6">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="password" class="form-control" required placeholder="••••••••">
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-full" id="registerBtn">
+                    Register
+                </button>
+            </form>
+            
+            <p class="text-center mt-6 text-muted text-sm">
+                Already have an account? <a href="login.html" class="text-gradient">Log in</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('registerBtn');
+            
+            try {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
+                btn.disabled = true;
+                
+                await api.register({ name, email, password });
+                const loginRes = await api.login({ email, password });
+                localStorage.setItem('token', loginRes.access_token);
+                
+                // create basic profile
+                await api.updateProfile({
+                    education: '', degree: '', branch: '', year: '', skills: '', interests: '', preferred_categories: '', preferred_mode: '', preferred_location: ''
+                });
+                
+                showToast('Registration successful! Redirecting to profile setup...');
+                setTimeout(() => {
+                    window.location.href = 'profile.html';
+                }, 1500);
+            } catch (error) {
+                showToast(error.message, 'error');
+                btn.innerHTML = 'Register';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

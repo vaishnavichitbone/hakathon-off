@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - OpporTune</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .opp-card {
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .match-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            border: 4px solid var(--border);
+        }
+        .mc-high { border-color: var(--match-high); color: var(--match-high); }
+        .mc-med { border-color: var(--match-med); color: var(--match-med); }
+        .mc-low { border-color: var(--match-low); color: var(--match-low); }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <a href="dashboard.html" class="logo">
+                <i class="fas fa-radar text-gradient"></i>
+                <span>OpporTune</span>
+            </a>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="sidebar-link active">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="discover.html" class="sidebar-link">
+                    <i class="fas fa-search"></i> Discover
+                </a>
+                <a href="roadmap.html" class="sidebar-link">
+                    <i class="fas fa-map-signs"></i> My Roadmap
+                </a>
+                <a href="tracker.html" class="sidebar-link">
+                    <i class="fas fa-tasks"></i> Tracker
+                </a>
+                <a href="profile.html" class="sidebar-link">
+                    <i class="fas fa-user"></i> Profile
+                </a>
+            </nav>
+            <button onclick="logout()" class="btn btn-outline w-full mt-4">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="mb-8 flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl" id="greeting">Good morning!</h1>
+                    <p class="text-muted mt-2">Here's your personalized opportunity overview.</p>
+                </div>
+            </header>
+
+            <div class="stats-grid">
+                <div class="glass-card stat-card">
+                    <div class="stat-icon"><i class="fas fa-star"></i></div>
+                    <div>
+                        <div class="text-2xl font-bold" id="highMatchCount">0</div>
+                        <div class="text-muted text-sm">High Matches</div>
+                    </div>
+                </div>
+                <div class="glass-card stat-card">
+                    <div class="stat-icon"><i class="fas fa-bookmark"></i></div>
+                    <div>
+                        <div class="text-2xl font-bold" id="savedCount">0</div>
+                        <div class="text-muted text-sm">Saved</div>
+                    </div>
+                </div>
+                <div class="glass-card stat-card">
+                    <div class="stat-icon"><i class="fas fa-paper-plane"></i></div>
+                    <div>
+                        <div class="text-2xl font-bold" id="appliedCount">0</div>
+                        <div class="text-muted text-sm">Applied</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid" style="grid-template-columns: 2fr 1fr; gap: 2rem;">
+                <div>
+                    <h2 class="text-xl mb-4">Top Recommendations for You</h2>
+                    <div id="recommendationsList">
+                        <div class="loading-container"><div class="loader"></div></div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h2 class="text-xl mb-4">Upcoming Deadlines</h2>
+                    <div class="glass-card p-4" id="deadlinesList">
+                        <div class="loading-container"><div class="loader"></div></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const user = await api.getMe();
+                document.getElementById('greeting').innerText = `Good day, ${user.name.split(' ')[0]}!`;
+
+                const [opps, apps] = await Promise.all([
+                    api.getOpportunities(),
+                    api.getApplications()
+                ]);
+                
+                // Stats
+                const saved = apps.filter(a => a.status === 'saved').length;
+                const applied = apps.filter(a => ['applied', 'shortlisted', 'selected'].includes(a.status)).length;
+                const highMatches = opps.filter(o => o.match_score >= 80).length;
+                
+                document.getElementById('savedCount').innerText = saved;
+                document.getElementById('appliedCount').innerText = applied;
+                document.getElementById('highMatchCount').innerText = highMatches;
+
+                // Render Top Recommendations
+                const topOpps = opps.filter(o => o.match_score >= 60).slice(0, 4);
+                const recContainer = document.getElementById('recommendationsList');
+                if (topOpps.length === 0) {
+                    recContainer.innerHTML = '<div class="glass-card text-center py-8"><p class="text-muted">Update your profile to get personalized recommendations.</p><a href="profile.html" class="btn btn-primary mt-4">Complete Profile</a></div>';
+                } else {
+                    recContainer.innerHTML = topOpps.map(opp => `
+                        <div class="glass-card opp-card">
+                            <div class="flex items-center gap-4">
+                                <div class="match-circle mc-${opp.match_score >= 80 ? 'high' : 'med'}">
+                                    ${opp.match_score}%
+                                </div>
+                                <div>
+                                    <h3 class="font-bold">${opp.title}</h3>
+                                    <p class="text-sm text-muted">${opp.organization} &bull; ${opp.category}</p>
+                                    <div class="mt-2">${getPriorityBadge(opp.priority)}</div>
+                                </div>
+                            </div>
+                            <a href="opportunity-details.html?id=${opp.id}" class="btn btn-outline">View Details</a>
+                        </div>
+                    `).join('');
+                }
+
+                // Render Deadlines
+                const deadlineContainer = document.getElementById('deadlinesList');
+                const deadlineOpps = [...opps].filter(o => o.days_remaining !== null && o.days_remaining <= 14).sort((a, b) => a.days_remaining - b.days_remaining).slice(0, 4);
+                
+                if (deadlineOpps.length === 0) {
+                    deadlineContainer.innerHTML = '<p class="text-muted text-center">No urgent deadlines approaching.</p>';
+                } else {
+                    deadlineContainer.innerHTML = deadlineOpps.map(opp => `
+                        <div class="mb-4 pb-4 border-b border-gray-700 last:border-0 last:mb-0 last:pb-0" style="border-bottom: 1px solid var(--border)">
+                            <div class="flex justify-between items-center mb-1">
+                                <h4 class="font-semibold text-sm truncate pr-2" style="max-width: 150px;" title="${opp.title}">${opp.title}</h4>
+                                <span class="badge ${opp.days_remaining <= 3 ? 'priority-high' : 'priority-med'}">${opp.days_remaining}d left</span>
+                            </div>
+                            <p class="text-xs text-muted">${opp.organization}</p>
+                        </div>
+                    `).join('');
+                }
+
+            } catch (error) {
+                console.error("Dashboard error:", error);
+            }
+        });
+    </script>
+</body>
+</html>

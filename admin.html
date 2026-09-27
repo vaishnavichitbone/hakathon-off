@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - OpporTune</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <a href="admin.html" class="logo">
+                <i class="fas fa-shield-alt text-gradient"></i>
+                <span>OpporTune Admin</span>
+            </a>
+            <nav class="sidebar-nav">
+                <a href="admin.html" class="sidebar-link active">
+                    <i class="fas fa-chart-bar"></i> Stats
+                </a>
+            </nav>
+            <button onclick="logout()" class="btn btn-outline w-full mt-4">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </aside>
+
+        <main class="main-content">
+            <header class="mb-8">
+                <h1 class="text-3xl">Admin Dashboard</h1>
+            </header>
+
+            <div class="grid" style="grid-template-columns: repeat(3, 1fr); gap: 2rem; margin-bottom: 2rem;" id="statsGrid">
+                <div class="loading-container" style="grid-column: 1/-1"><div class="loader"></div></div>
+            </div>
+
+            <div class="glass-card">
+                <h2 class="text-xl mb-4 border-b pb-2" style="border-bottom: 1px solid var(--border)">API Endpoints Overview</h2>
+                <div class="flex gap-4">
+                    <a href="http://localhost:8000/docs" target="_blank" class="btn btn-primary"><i class="fas fa-book"></i> Swagger UI (Docs)</a>
+                    <a href="http://localhost:8000/redoc" target="_blank" class="btn btn-outline"><i class="fas fa-file-alt"></i> ReDoc</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const user = await api.getMe();
+                if (user.role !== 'admin') {
+                    document.body.innerHTML = '<div class="container mt-8"><h1 class="text-red-500 text-2xl">Access Denied</h1><p>You must be an admin to view this page.</p><a href="dashboard.html" class="btn btn-primary mt-4">Go Back</a></div>';
+                    return;
+                }
+
+                const stats = await fetchAPI('/admin/stats');
+                
+                document.getElementById('statsGrid').innerHTML = `
+                    <div class="glass-card flex flex-col justify-center items-center text-center p-6">
+                        <i class="fas fa-users text-4xl mb-4 text-gradient"></i>
+                        <div class="text-4xl font-bold">${stats.students_count}</div>
+                        <div class="text-muted mt-2">Registered Students</div>
+                    </div>
+                    <div class="glass-card flex flex-col justify-center items-center text-center p-6">
+                        <i class="fas fa-briefcase text-4xl mb-4 text-gradient"></i>
+                        <div class="text-4xl font-bold">${stats.opportunities_count}</div>
+                        <div class="text-muted mt-2">Opportunities</div>
+                    </div>
+                    <div class="glass-card flex flex-col justify-center items-center text-center p-6">
+                        <i class="fas fa-paper-plane text-4xl mb-4 text-gradient"></i>
+                        <div class="text-4xl font-bold">${stats.applications_count}</div>
+                        <div class="text-muted mt-2">Total Applications tracked</div>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('statsGrid').innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

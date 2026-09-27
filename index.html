@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpporTune - Your Personal Opportunity Radar</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .hero {
+            padding: 6rem 0;
+            text-align: center;
+        }
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 2.5rem;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+        .feature-card {
+            text-align: center;
+            padding: 2rem;
+        }
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <i class="fas fa-radar text-gradient"></i>
+                <span>OpporTune</span>
+            </a>
+            <div class="nav-links">
+                <a href="login.html" class="btn btn-outline">Log In</a>
+                <a href="register.html" class="btn btn-primary">Create Profile</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section class="hero">
+            <h1 class="text-gradient">Find Opportunities That Fit You</h1>
+            <p>"Don't search everywhere. Let OpporTune tell you what fits you and why."</p>
+            <div class="flex items-center justify-center gap-4">
+                <a href="register.html" class="btn btn-primary">Create My Profile</a>
+                <a href="#how-it-works" class="btn btn-outline">See How It Works</a>
+            </div>
+        </section>
+
+        <section id="how-it-works" class="mt-8 mb-8">
+            <h2 class="text-3xl text-center mb-8">Why OpporTune?</h2>
+            <div class="features-grid">
+                <div class="glass-card feature-card">
+                    <i class="fas fa-bullseye feature-icon"></i>
+                    <h3 class="text-xl mb-4">Explainable Match Score</h3>
+                    <p class="text-muted">We don't just show opportunities. We calculate an exact match percentage based on your skills, interests, and academics, and tell you *why* it matches.</p>
+                </div>
+                <div class="glass-card feature-card">
+                    <i class="fas fa-map-signs feature-icon"></i>
+                    <h3 class="text-xl mb-4">Personalized Roadmap</h3>
+                    <p class="text-muted">Organize your career path into "Apply Now", "Prepare & Apply", and "Learn First" based on your missing skills and deadlines.</p>
+                </div>
+                <div class="glass-card feature-card">
+                    <i class="fas fa-tasks feature-icon"></i>
+                    <h3 class="text-xl mb-4">Application Tracking</h3>
+                    <p class="text-muted">Stop using messy spreadsheets. Track everything from "Saved" to "Selected" right inside the platform.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/api.js"></script>
+</body>
+</html>

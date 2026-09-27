@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Profile - OpporTune</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <a href="dashboard.html" class="logo">
+                <i class="fas fa-radar text-gradient"></i>
+                <span>OpporTune</span>
+            </a>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="sidebar-link">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="discover.html" class="sidebar-link">
+                    <i class="fas fa-search"></i> Discover
+                </a>
+                <a href="roadmap.html" class="sidebar-link">
+                    <i class="fas fa-map-signs"></i> My Roadmap
+                </a>
+                <a href="tracker.html" class="sidebar-link">
+                    <i class="fas fa-tasks"></i> Tracker
+                </a>
+                <a href="profile.html" class="sidebar-link active">
+                    <i class="fas fa-user"></i> Profile
+                </a>
+            </nav>
+            <button onclick="logout()" class="btn btn-outline w-full mt-4">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </aside>
+
+        <main class="main-content">
+            <header class="mb-8">
+                <h1 class="text-3xl">My Profile</h1>
+                <p class="text-muted mt-2">Update your details to get better opportunity recommendations.</p>
+            </header>
+
+            <div class="glass-card max-w-3xl">
+                <form id="profileForm">
+                    <h3 class="text-xl mb-4 text-gradient border-b pb-2" style="border-bottom: 1px solid var(--border)">Academic Information</h3>
+                    <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Education Level</label>
+                            <input type="text" id="education" class="form-control" placeholder="e.g. B.E., B.Tech, B.Sc">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Degree/Major</label>
+                            <input type="text" id="degree" class="form-control" placeholder="e.g. Computer Engineering">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Branch/Specialization</label>
+                            <input type="text" id="branch" class="form-control" placeholder="e.g. AI & Data Science">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Academic Year</label>
+                            <select id="year" class="form-control" style="background: var(--bg-card)">
+                                <option value="">Select Year</option>
+                                <option value="First Year">First Year</option>
+                                <option value="Second Year">Second Year</option>
+                                <option value="Third Year">Third Year</option>
+                                <option value="Final Year">Final Year</option>
+                                <option value="Graduated">Graduated</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl mb-4 mt-6 text-gradient border-b pb-2" style="border-bottom: 1px solid var(--border)">Skills & Interests</h3>
+                    <div class="form-group">
+                        <label class="form-label">Skills (comma separated)</label>
+                        <input type="text" id="skills" class="form-control" placeholder="e.g. Python, SQL, HTML, CSS, JavaScript">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Interests (comma separated)</label>
+                        <input type="text" id="interests" class="form-control" placeholder="e.g. AI, Software Development, Web Design">
+                    </div>
+
+                    <h3 class="text-xl mb-4 mt-6 text-gradient border-b pb-2" style="border-bottom: 1px solid var(--border)">Preferences</h3>
+                    <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Preferred Categories</label>
+                            <input type="text" id="preferred_categories" class="form-control" placeholder="e.g. Internships, Hackathons">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Preferred Mode</label>
+                            <input type="text" id="preferred_mode" class="form-control" placeholder="e.g. Remote, Hybrid, On-site">
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label class="form-label">Preferred Location</label>
+                            <input type="text" id="preferred_location" class="form-control" placeholder="e.g. San Francisco, New York">
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex justify-end">
+                        <button type="submit" class="btn btn-primary" id="saveBtn">
+                            <i class="fas fa-save"></i> Save Profile
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const profile = await api.getProfile();
+                document.getElementById('education').value = profile.education || '';
+                document.getElementById('degree').value = profile.degree || '';
+                document.getElementById('branch').value = profile.branch || '';
+                document.getElementById('year').value = profile.year || '';
+                document.getElementById('skills').value = profile.skills || '';
+                document.getElementById('interests').value = profile.interests || '';
+                document.getElementById('preferred_categories').value = profile.preferred_categories || '';
+                document.getElementById('preferred_mode').value = profile.preferred_mode || '';
+                document.getElementById('preferred_location').value = profile.preferred_location || '';
+            } catch (error) {
+                console.error("Could not load profile:", error);
+            }
+        });
+
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('saveBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            btn.disabled = true;
+
+            const profileData = {
+                education: document.getElementById('education').value,
+                degree: document.getElementById('degree').value,
+                branch: document.getElementById('branch').value,
+                year: document.getElementById('year').value,
+                skills: document.getElementById('skills').value,
+                interests: document.getElementById('interests').value,
+                preferred_categories: document.getElementById('preferred_categories').value,
+                preferred_mode: document.getElementById('preferred_mode').value,
+                preferred_location: document.getElementById('preferred_location').value,
+            };
+
+            try {
+                await api.updateProfile(profileData);
+                showToast('Profile updated successfully! Recommendations will now be tailored to you.');
+            } catch (error) {
+                showToast(error.message, 'error');
+            } finally {
+                btn.innerHTML = '<i class="fas fa-save"></i> Save Profile';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

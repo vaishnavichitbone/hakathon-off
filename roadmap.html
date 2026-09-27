@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Roadmap - OpporTune</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .roadmap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            align-items: flex-start;
+        }
+        .roadmap-column {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+        }
+        .rm-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: transform 0.2s;
+        }
+        .rm-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <a href="dashboard.html" class="logo">
+                <i class="fas fa-radar text-gradient"></i>
+                <span>OpporTune</span>
+            </a>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="sidebar-link">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="discover.html" class="sidebar-link">
+                    <i class="fas fa-search"></i> Discover
+                </a>
+                <a href="roadmap.html" class="sidebar-link active">
+                    <i class="fas fa-map-signs"></i> My Roadmap
+                </a>
+                <a href="tracker.html" class="sidebar-link">
+                    <i class="fas fa-tasks"></i> Tracker
+                </a>
+                <a href="profile.html" class="sidebar-link">
+                    <i class="fas fa-user"></i> Profile
+                </a>
+            </nav>
+            <button onclick="logout()" class="btn btn-outline w-full mt-4">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </aside>
+
+        <main class="main-content">
+            <header class="mb-8">
+                <h1 class="text-3xl">My Opportunity Roadmap</h1>
+                <p class="text-muted mt-2">A personalized action plan based on your skills and deadlines.</p>
+            </header>
+
+            <div class="roadmap-grid" id="roadmapGrid">
+                <div class="loading-container" style="grid-column: 1 / -1;"><div class="loader"></div></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const roadmap = await api.getRoadmap();
+                const container = document.getElementById('roadmapGrid');
+                
+                const renderCard = (opp) => `
+                    <div class="rm-card">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="badge badge-outline" style="font-size: 0.65rem">${opp.category}</span>
+                            <span class="text-xs font-bold" style="color: var(--${getMatchColor(opp.match_score)})">${opp.match_score}% Match</span>
+                        </div>
+                        <h4 class="font-bold text-sm mb-1 line-clamp-1"><a href="opportunity-details.html?id=${opp.id}">${opp.title}</a></h4>
+                        <p class="text-xs text-muted mb-2">${opp.organization}</p>
+                        
+                        <div class="text-xs flex justify-between items-center border-t border-gray-700 pt-2" style="border-top: 1px solid var(--border); margin-top: 0.5rem">
+                            <span class="text-red-400"><i class="far fa-clock"></i> ${opp.days_remaining !== null ? opp.days_remaining + 'd left' : 'No deadline'}</span>
+                            <a href="opportunity-details.html?id=${opp.id}" class="text-gradient">View <i class="fas fa-arrow-right text-[10px]"></i></a>
+                        </div>
+                        ${opp.missing_skills.length > 0 ? `<div class="text-xs text-muted mt-2 bg-gray-800 p-2 rounded" style="background: rgba(0,0,0,0.2)">To learn: ${opp.missing_skills.join(', ')}</div>` : ''}
+                    </div>
+                `;
+
+                container.innerHTML = `
+                    <div class="roadmap-column">
+                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2 border-b pb-2" style="border-bottom: 2px solid var(--high-priority)">
+                            <i class="fas fa-fire" style="color: var(--high-priority)"></i> Apply Now
+                        </h3>
+                        <p class="text-xs text-muted mb-4">High match and upcoming deadlines.</p>
+                        ${roadmap.apply_now.length > 0 ? roadmap.apply_now.map(renderCard).join('') : '<p class="text-sm text-muted text-center py-4">No immediate actions required.</p>'}
+                    </div>
+                    
+                    <div class="roadmap-column">
+                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2 border-b pb-2" style="border-bottom: 2px solid var(--med-priority)">
+                            <i class="fas fa-bolt" style="color: var(--med-priority)"></i> Prepare & Apply
+                        </h3>
+                        <p class="text-xs text-muted mb-4">Good matches. Might need minor prep.</p>
+                        ${roadmap.prepare_apply.length > 0 ? roadmap.prepare_apply.map(renderCard).join('') : '<p class="text-sm text-muted text-center py-4">Nothing here.</p>'}
+                    </div>
+                    
+                    <div class="roadmap-column">
+                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2 border-b pb-2" style="border-bottom: 2px solid var(--low-priority)">
+                            <i class="fas fa-book" style="color: var(--low-priority)"></i> Learn First
+                        </h3>
+                        <p class="text-xs text-muted mb-4">Requires skills you don't have yet.</p>
+                        ${roadmap.learn_first.length > 0 ? roadmap.learn_first.map(renderCard).join('') : '<p class="text-sm text-muted text-center py-4">You have all required skills for recommended items!</p>'}
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('roadmapGrid').innerHTML = `<p class="text-red-500">Error loading roadmap: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

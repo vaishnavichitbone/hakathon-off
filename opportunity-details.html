@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opportunity Details - OpporTune</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .details-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+        .match-section {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+        .checklist {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .checklist li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .check-icon { color: var(--secondary); }
+        .miss-icon { color: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <a href="dashboard.html" class="logo">
+                <i class="fas fa-radar text-gradient"></i>
+                <span>OpporTune</span>
+            </a>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="sidebar-link">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="discover.html" class="sidebar-link">
+                    <i class="fas fa-search"></i> Discover
+                </a>
+                <a href="roadmap.html" class="sidebar-link">
+                    <i class="fas fa-map-signs"></i> My Roadmap
+                </a>
+                <a href="tracker.html" class="sidebar-link">
+                    <i class="fas fa-tasks"></i> Tracker
+                </a>
+                <a href="profile.html" class="sidebar-link">
+                    <i class="fas fa-user"></i> Profile
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content" id="mainContent">
+            <div class="loading-container"><div class="loader"></div></div>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            const mainContent = document.getElementById('mainContent');
+
+            if (!id) {
+                mainContent.innerHTML = '<p>No opportunity selected.</p>';
+                return;
+            }
+
+            try {
+                const opp = await api.getOpportunity(id);
+                
+                // Get bookmarks and apps to check state
+                const [bookmarks, apps] = await Promise.all([
+                    api.getBookmarks(),
+                    api.getApplications()
+                ]);
+                
+                const isBookmarked = bookmarks.some(b => b.opportunity_id === opp.id);
+                const currentApp = apps.find(a => a.opportunity_id === opp.id);
+                
+                let matchColor = getMatchColor(opp.match_score);
+
+                mainContent.innerHTML = `
+                    <header class="mb-6">
+                        <a href="discover.html" class="btn btn-outline mb-4" style="padding: 0.5rem 1rem"><i class="fas fa-arrow-left"></i> Back to Discover</a>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="badge badge-outline">${opp.category}</span>
+                                    ${getPriorityBadge(opp.priority)}
+                                </div>
+                                <h1 class="text-4xl mb-2">${opp.title}</h1>
+                                <p class="text-xl text-muted"><i class="fas fa-building mr-2"></i>${opp.organization}</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-4xl font-bold" style="color: var(--${matchColor})">${opp.match_score}%</div>
+                                <div class="text-muted text-sm">Match Score</div>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div class="details-grid">
+                        <div class="glass-card">
+                            <h2 class="text-2xl mb-4 border-b pb-2" style="border-bottom: 1px solid var(--border)">Overview</h2>
+                            <div class="mb-6">
+                                <h3 class="text-lg font-semibold mb-2">Description</h3>
+                                <p class="text-muted" style="white-space: pre-line">${opp.description}</p>
+                            </div>
+                            <div class="mb-6">
+                                <h3 class="text-lg font-semibold mb-2">Eligibility</h3>
+                                <p class="text-muted" style="white-space: pre-line">${opp.eligibility || 'Not specified'}</p>
+                            </div>
+                            <div class="mb-6">
+                                <h3 class="text-lg font-semibold mb-2">Benefits</h3>
+                                <p class="text-muted" style="white-space: pre-line">${opp.benefits || 'Not specified'}</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="glass-card mb-6">
+                                <h2 class="text-xl mb-4 border-b pb-2" style="border-bottom: 1px solid var(--border)">Why this matches you</h2>
+                                
+                                <div class="mb-4">
+                                    <h4 class="text-sm font-semibold text-muted mb-2">MATCHED:</h4>
+                                    <ul class="checklist">
+                                        ${opp.matched_category ? `<li><i class="fas fa-check-circle check-icon"></i> Category: ${opp.category}</li>` : ''}
+                                        ${opp.matched_skills.map(s => `<li><i class="fas fa-check-circle check-icon"></i> Skill: ${s}</li>`).join('')}
+                                        ${opp.matched_interests.map(s => `<li><i class="fas fa-check-circle check-icon"></i> Interest: ${s}</li>`).join('')}
+                                        ${(!opp.matched_category && opp.matched_skills.length === 0 && opp.matched_interests.length === 0) ? '<li class="text-muted text-sm italic">General eligibility criteria matched.</li>' : ''}
+                                    </ul>
+                                </div>
+                                
+                                ${opp.missing_skills.length > 0 ? `
+                                <div class="mb-4">
+                                    <h4 class="text-sm font-semibold text-muted mb-2">MISSING:</h4>
+                                    <ul class="checklist">
+                                        ${opp.missing_skills.map(s => `<li><i class="fas fa-exclamation-triangle miss-icon"></i> Skill: ${s}</li>`).join('')}
+                                    </ul>
+                                </div>
+                                ` : ''}
+                            </div>
+
+                            <div class="glass-card mb-6">
+                                <h2 class="text-xl mb-4 border-b pb-2" style="border-bottom: 1px solid var(--border)">Details</h2>
+                                <ul class="checklist mb-4">
+                                    <li><i class="fas fa-map-marker-alt w-6 text-muted"></i> ${opp.location || 'Not specified'}</li>
+                                    <li><i class="fas fa-laptop-house w-6 text-muted"></i> ${opp.mode || 'Not specified'}</li>
+                                    <li><i class="far fa-calendar-alt w-6 text-muted"></i> Deadline: ${opp.deadline || 'Not specified'}</li>
+                                    ${opp.days_remaining !== null ? `<li><i class="fas fa-stopwatch w-6 text-muted"></i> <span class="${opp.days_remaining <= 3 ? 'text-red-500 font-bold' : ''}">${opp.days_remaining} days remaining</span></li>` : ''}
+                                </ul>
+                                
+                                <div class="flex flex-col gap-3 mt-6">
+                                    ${opp.official_url ? `<a href="${opp.official_url}" target="_blank" rel="noopener noreferrer" class="btn btn-primary w-full"><i class="fas fa-external-link-alt"></i> Official Website</a>` : ''}
+                                    
+                                    <button id="bookmarkBtn" class="btn btn-outline w-full" onclick="toggleBookmark(${opp.id}, ${isBookmarked})">
+                                        <i class="${isBookmarked ? 'fas' : 'far'} fa-bookmark"></i> 
+                                        <span id="bookmarkText">${isBookmarked ? 'Remove Bookmark' : 'Save Opportunity'}</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="glass-card">
+                                <h2 class="text-xl mb-4 border-b pb-2" style="border-bottom: 1px solid var(--border)">Application Tracker</h2>
+                                <div class="form-group">
+                                    <label class="form-label">Update Status</label>
+                                    <select id="appStatus" class="form-control" onchange="updateStatus(${opp.id})" style="background: var(--bg-card)">
+                                        <option value="saved" ${currentApp?.status === 'saved' ? 'selected' : ''}>Saved</option>
+                                        <option value="planning" ${currentApp?.status === 'planning' ? 'selected' : ''}>Planning to Apply</option>
+                                        <option value="applied" ${currentApp?.status === 'applied' ? 'selected' : ''}>Applied</option>
+                                        <option value="shortlisted" ${currentApp?.status === 'shortlisted' ? 'selected' : ''}>Shortlisted</option>
+                                        <option value="rejected" ${currentApp?.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+                                        <option value="selected" ${currentApp?.status === 'selected' ? 'selected' : ''}>Selected</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                mainContent.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
+            }
+        });
+
+        async function toggleBookmark(id, currentlyBookmarked) {
+            const btn = document.getElementById('bookmarkBtn');
+            const txt = document.getElementById('bookmarkText');
+            const icon = btn.querySelector('i');
+            
+            try {
+                if (currentlyBookmarked) {
+                    await api.removeBookmark(id);
+                    txt.innerText = 'Save Opportunity';
+                    icon.className = 'far fa-bookmark';
+                    btn.onclick = () => toggleBookmark(id, false);
+                    showToast('Removed from bookmarks');
+                } else {
+                    await api.addBookmark(id);
+                    txt.innerText = 'Remove Bookmark';
+                    icon.className = 'fas fa-bookmark';
+                    btn.onclick = () => toggleBookmark(id, true);
+                    showToast('Added to bookmarks');
+                    
+                    // Auto set status to saved if not exists
+                    const statusSelect = document.getElementById('appStatus');
+                    if (!statusSelect.value) statusSelect.value = 'saved';
+                    await api.updateApplicationStatus(id, { status: 'saved' });
+                }
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+        
+        async function updateStatus(id) {
+            const status = document.getElementById('appStatus').value;
+            try {
+                await api.updateApplicationStatus(id, { status });
+                showToast(`Status updated to: ${status}`);
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
